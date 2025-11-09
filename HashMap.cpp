@@ -46,7 +46,7 @@ int hashMap::getClosestPrime(int start) {
     int n = std::max(2, start);
     while (true) {
         bool isPrime = true;
-        for (int d = 2; d <= static_cast<int>(std::sqrt(n)); ++d) {
+        for (int d = 2; d <= static_cast<int>(sqrt(n)); ++d) {
             if (n % d == 0) { isPrime = false; break; }
         }
         if (isPrime) return n;
