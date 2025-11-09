@@ -29,7 +29,19 @@ hashMap::hashMap(int hfn, int cfn) {
 	// collision, your collision function may also result in collisions.  We want to keep
 	// track of that in the collisionsCt. THat way we can measure the efficiency of our
 	// hashing and collision functions.
+	whichHashFn = hfn;
+	whichCollisionFn = cfn; 
+	first = "I";
+	mapSize = 57; 
+	keysCt = 0;
+	map = new hNode *[mapSize];
+	for (int i = 0; i < mapSize; i++) {
+		map[i] = nullptr;
+	}
+	hashCollisionsCt = 0;
+	collisionsCt = 0;
 }
+
 void hashMap::addKeyandValue(string k, string v) {
 	// this method finds if and how we need to incorporate the key and/or its accompanying
 	//value into the hash map.
@@ -48,11 +60,39 @@ void hashMap::addKeyandValue(string k, string v) {
 	//    where the key is located (this is a hashCollision - so increase the hashCollisionCt),
 	//    it now calls the dealWithCollisions method (described below)
 	//
+	int result = getIndex(k);
+	if (map[result] == NULL) {
+		insertNewKeyandValue(k, v, result);
+	} 
+	else if (map[result]->key == k) {
+		map[result]->addValue(v);
+	}	
+	else {
+		hashCollisionsCt++;
+		int newIndex = dealWithCollisions(k, result);
+		if (map[newIndex] == NULL) {
+			insertNewKeyandValue(k, v, newIndex);
+		}
+		else if (map[newIndex->key] == k){
+			map[newIndex]->addValue(v);
+		}
+	}
+
 }
 
 int hashMap::getIndex(string k) {
 	//This method simply uses whichHashFn to determine which hashing function to call with the key.
 	// it then returns that index
+	if (whichHashFn == 1) {
+		return hashFn(k);
+	}
+	else if (whichHashFn == 2) {
+		return hashFn2(k);
+	}
+	else {
+		return hashFn3(k);
+	}
+}
 
 int hashMap::dealWithCollisions(string k, int i) {
 	/* this method is really short and straightforward.  It determines which collision function to
@@ -60,7 +100,17 @@ int hashMap::dealWithCollisions(string k, int i) {
 	 * returns the index that collision function returned.  That's it.
 	 * for test 1 it will call CollFn1 (the one I gave you)
 	 */
+	if (whichCollisionFn == 1) {
+		return collFn1(k, i);
+	}
+	else if (whichCollisionFn == 2) {
+		return collFn2(k, i);
+	}
+	else {
+		return collFn3(k, i); 
+	}
 }
+
 int hashMap::collFn1(string k, int i) {
 	// My ridiculously simple collision function that uses linear probing.
 	// PLEASE write something better than this for collFn2 and collFn3...
@@ -80,11 +130,31 @@ int hashMap::collFn1(string k, int i) {
 int hashMap::collFn2(string k,  int i) {
 	// you gotta write to compare with collFn3 to see which collision function works best with the
 	// data we're using.
-	return 2;
+
+	//uses chaining for collision resolution
+	hNode* current = map[i];
+	//traverse existing chain
+	while (current != nullptr){
+		if (current->key == k){
+			return i;
+		}
+		if (current->next = nullptr)
+			break;
+		current = current->next;
+	}
+	// If we reach here the key wasn't found, so we need to create and link a new node.
+	hNode* newNode = new hNode(k);
+	current->next = newNode;
+
+	//increment collision counter
+	collisionsCt++;
+
+	// return same index (chain at bucket i )
+	return i;
 }
 int hashMap::collFn3(string k, int i) {
 	// you gotta write to see which collision function works best
-	return 3;
+	return i;
 }
 
 void hashMap::insertNewKeyandValue(string k, string v, int ind) {
