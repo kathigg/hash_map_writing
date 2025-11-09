@@ -146,7 +146,7 @@ public:
 	hashMap(int hashfn, int collfn);
 	~hashMap();
 	void addKeyandValue(string k, string v);
-	int hashMap::getIndex(string k) {
+	int hashMap::getIndex(string k);
 	//This method simply uses whichHashFn to determine which hashing function to call with the key.
 	// it then returns that index
 	int hashFn1(string k);  // the hash function I'm giving you for testing.  Takes the string and returns an index
@@ -160,7 +160,7 @@ public:
 	int collFn3(string k, int i);  // your collision function 2
 	void ckIfNeedToRehash(); // this is the function that checks to see if the map is 70% full
 		// or more.  If it's over 70% full, it should call the rehash function
-	int getClosestPrime();  // I used a binary search in the array to find the closest prime to double the map Size, and then set mapSize to that new prime
+	int getClosestPrime(int start);  // I used a binary search in the array to find the closest prime to double the map Size, and then set mapSize to that new prime
 	void reHash();  // when size of array is at 70%, double array size and rehash keys
 	int findKeyIndex(string k);  //finds the key in the array and returns its index.  If it's not in the array, returns -1
 

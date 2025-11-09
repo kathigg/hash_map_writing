@@ -42,6 +42,18 @@ hashMap::hashMap(int hfn, int cfn) {
 	collisionsCt = 0;
 }
 
+int hashMap::getClosestPrime(int start) {
+    int n = std::max(2, start);
+    while (true) {
+        bool isPrime = true;
+        for (int d = 2; d <= static_cast<int>(std::sqrt(n)); ++d) {
+            if (n % d == 0) { isPrime = false; break; }
+        }
+        if (isPrime) return n;
+        ++n;
+    }
+}
+
 void hashMap::addKeyandValue(string k, string v) {
 	// this method finds if and how we need to incorporate the key and/or its accompanying
 	//value into the hash map.
@@ -73,7 +85,7 @@ void hashMap::addKeyandValue(string k, string v) {
 		if (map[newIndex] == NULL) {
 			insertNewKeyandValue(k, v, newIndex);
 		}
-		else if (map[newIndex->key] == k){
+		else if (map[newIndex]->key == k){
 			map[newIndex]->addValue(v);
 		}
 	}
@@ -81,17 +93,9 @@ void hashMap::addKeyandValue(string k, string v) {
 }
 
 int hashMap::getIndex(string k) {
-	//This method simply uses whichHashFn to determine which hashing function to call with the key.
-	// it then returns that index
-	if (whichHashFn == 1) {
-		return hashFn(k);
-	}
-	else if (whichHashFn == 2) {
-		return hashFn2(k);
-	}
-	else {
-		return hashFn3(k);
-	}
+    if (whichHashFn == 1) return hashFn1(k);
+    else if (whichHashFn == 2) return hashFn2(k);   // Only if hashFn2 is a true primary hash.
+    else return hashFn3(k);
 }
 
 int hashMap::dealWithCollisions(string k, int i) {
@@ -127,34 +131,43 @@ int hashMap::collFn1(string k, int i) {
 	if (ct == mapSize) {cout <<"ERROR" << endl; return -1;}
 	return i;
 }
+
 int hashMap::collFn2(string k,  int i) {
 	// you gotta write to compare with collFn3 to see which collision function works best with the
 	// data we're using.
+	// using double hashing for collision resolution
+	int hash1 = i; 
+	int hash2 = hashFn2(k);
 
-	//uses chaining for collision resolution
-	hNode* current = map[i];
-	//traverse existing chain
-	while (current != nullptr){
-		if (current->key == k){
-			return i;
+	if (hash2 == 0) hash2 = 1;
+	for (int j = 1; j < mapSize; j++) {
+		int newIndex = (hash1 + j * hash2) % mapSize;
+
+		if (map[newIndex] == nullptr || map[newIndex]->key == k) {
+			collisionsCt += (j - 1);
+			return newIndex;
 		}
-		if (current->next = nullptr)
-			break;
-		current = current->next;
 	}
-	// If we reach here the key wasn't found, so we need to create and link a new node.
-	hNode* newNode = new hNode(k);
-	current->next = newNode;
 
-	//increment collision counter
-	collisionsCt++;
-
-	// return same index (chain at bucket i )
-	return i;
+	cout << "ERROR" << endl; 
+	return -1;
 }
 int hashMap::collFn3(string k, int i) {
 	// you gotta write to see which collision function works best
-	return i;
+	// using quadratic probing for collision resolution
+	for (int j = 1; j <= mapSize; j++){
+		// compute new index using quadratic probing 
+		int newIndex = (i + j * j) % mapSize;
+		if (map[newIndex] == nullptr) {
+			collisionsCt += (j - 1);
+			return newIndex;
+		}
+		if (map[newIndex]->key == k){
+			return newIndex;
+		}
+	}
+
+	return i; 
 }
 
 void hashMap::insertNewKeyandValue(string k, string v, int ind) {
@@ -164,6 +177,10 @@ void hashMap::insertNewKeyandValue(string k, string v, int ind) {
 	// It increases the number of keys in the map (aka keysCt)
 	//
 	// and then it calls ckIfNeedToRehash()
+	hNode* newNode = new hNode(k, v);
+	map[ind] = newNode;
+	keysCt++;
+	ckIfNeedToRehash();
 }
 
 int hashMap::hashFn1(string k) {
@@ -180,13 +197,24 @@ int hashMap::hashFn1(string k) {
 }
 int hashMap::hashFn2(string k) {
 	// One of two hashing functions you'll be writing to try to see which function works most
-	// efficiently with the data.  Right now it just returns 2.  Not good.
-	return 2;
+	// efficiently with the data.  
+
+	// essentially building hash2 = R - (sumOfChars % R)
+	int sum = 0; 
+	for (char c : k) {
+		sum += (int)c;
+	}
+	int R = 53; // this is a prime number smaller than the mapSize (57)
+	int step = R - (sum % R);
+	if (step == 0) step = 1; // avoid 0 step size 
+	return step; 
 }
+
 int hashMap::hashFn3(string k) {
-	// The second of two hashing functions you'll be writing to try to see which function works most
-	// efficiently with the data.  Right now it just returns 3.  Not good.
-	return 3;
+    int sum = 0;
+    for (char c : k) sum += static_cast<int>(c);
+    int primeBelow = getClosestPrime(mapSize - 1);
+    return sum % primeBelow;
 }
 
 void hashMap::ckIfNeedToRehash() {
@@ -194,13 +222,12 @@ void hashMap::ckIfNeedToRehash() {
 	// full, it should call the rehash function.
 	// BIG Mistake I see a lot: dividing an int by an int to see if it's .7 or greater.
 	// int/int results in a floored int.  so 7/10 will be 0, not .7
-
+	float loadFactor = (float)keysCt / (float)mapSize;
+	if (loadFactor >= 0.7) {
+		reHash();
+	}
 }
 
-int hashMap::getClosestPrime() {
-	// function that determines the new map Size.  It doubles the current mapSize, and then finds
-	// the closest prime to that doubled number.  It then returns that prime number
-}
 int hashMap::findKeyIndex(string k) {
 	// this method is used by the writeFile method.  It takes as input a word (the key)
 	// and, using the appropriate hashing function (and, if necessary, the appropriate
@@ -210,6 +237,13 @@ int hashMap::findKeyIndex(string k) {
 	// IF you start at index 0 of the map and loop through every value looking for k,
 	// you will lose 50% of your grade on this project because that is the exact opposite
 	// of the point of a hashmap.
+	int index = getIndex(k); 
+	if (map[index] != nullptr && map[index]->key == k){
+		return index;
+	}
+	else {
+		return dealWithCollisions(k, index);
+	}
 }
 void hashMap::reHash() {
 	// This is a challenging method.
@@ -219,10 +253,41 @@ void hashMap::reHash() {
 	// Once done, you'll need to find where to insert each of the nodes from the old map
 	// into your newly created map.  You can use the function(s) you've already written
 	// for this.
+	int oldMapSize = mapSize;
+    int newMapSize = getClosestPrime(mapSize * 2);
+    hNode** oldMap = map;
+
+    mapSize = newMapSize;
+    map = new hNode*[mapSize];
+    for (int i = 0; i < mapSize; ++i) map[i] = nullptr;
+
+    // Optional: reset stats
+    // hashCollisionsCt = 0;
+    // collisionsCt = 0;
+
+    keysCt = 0;
+    for (int i = 0; i < oldMapSize; ++i) {
+        if (!oldMap[i]) continue;
+        string key = oldMap[i]->key;
+        for (int j = 0; j < oldMap[i]->valuesCt; ++j) {
+            addKeyandValue(key, oldMap[i]->valueArr[j]);
+        }
+        delete oldMap[i];
+    }
+    delete[] oldMap;
 }
+
 hashMap::~hashMap() {
 	// Destructor.  deletes every node in the map, and then deletes the map
-
+	for (int i = 0; i < mapSize; i++) {
+		if (map[i] == nullptr) {
+			continue;
+		}
+		else {
+			delete map[i];
+		}
+	}
+	delete[] map;
 }
 
 void hashMap::printMap() {
