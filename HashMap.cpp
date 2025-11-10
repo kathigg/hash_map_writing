@@ -43,6 +43,8 @@ hashMap::hashMap(int hfn, int cfn) {
 }
 
 int hashMap::getClosestPrime(int start) {
+	// this is used as a helper function. I modified it to use a start index 
+	// so I could use it for other pieces of the code, like the hashing. 
     int n = std::max(2, start);
     while (true) {
         bool isPrime = true;
@@ -93,6 +95,7 @@ void hashMap::addKeyandValue(string k, string v) {
 }
 
 int hashMap::getIndex(string k) {
+	// this method simply uses whichHashFn to determine which hashing function to call with the key.
     if (whichHashFn == 1) return hashFn1(k);
     else if (whichHashFn == 2) return hashFn2(k);   // Only if hashFn2 is a true primary hash.
     else return hashFn3(k);
@@ -133,9 +136,8 @@ int hashMap::collFn1(string k, int i) {
 }
 
 int hashMap::collFn2(string k,  int i) {
-	// you gotta write to compare with collFn3 to see which collision function works best with the
-	// data we're using.
-	// using double hashing for collision resolution
+	// This uses double hashing for collision resolution. 
+	// 
 	int hash1 = i; 
 	int hash2 = hashFn2(k);
 
@@ -237,13 +239,19 @@ int hashMap::findKeyIndex(string k) {
 	// IF you start at index 0 of the map and loop through every value looking for k,
 	// you will lose 50% of your grade on this project because that is the exact opposite
 	// of the point of a hashmap.
-	int index = getIndex(k); 
-	if (map[index] != nullptr && map[index]->key == k){
-		return index;
-	}
-	else {
-		return dealWithCollisions(k, index);
-	}
+	int i = getIndex(k);
+    int start = i;
+
+    for (int j = 0; j < mapSize; j++) {
+        int index;
+        if (whichCollisionFn == 1) index = (i + j) % mapSize;
+        else if (whichCollisionFn == 2) index = (i + j * hashFn2(k)) % mapSize;
+        else index = (i + j * j) % mapSize;
+
+        if (map[index] == nullptr) return -1; // not found
+        if (map[index]->key == k) return index;
+    }
+    return -1;
 }
 void hashMap::reHash() {
 	// This is a challenging method.

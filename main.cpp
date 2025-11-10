@@ -10,7 +10,7 @@ int main() {
     int collfn; // for which  collision fn to use
     /*************************************************/
     /* test 1
-    /* For this:
+     For this:
      * 1) Create your hNode.cpp.  You'll need to write the hNode constructors and the addValue methods.
      *    For later tests, you'll have to write the getRandomValue method as well as the
      *    destructor (as defined in hNode.h)
@@ -27,7 +27,7 @@ int main() {
     k->ht->printMap();
     /**********************************/
     /* Test2
-    /* For this part you'll be writing the destructor for HNode and hashMap.  Once done, comment in
+     For this part you'll be writing the destructor for HNode and hashMap.  Once done, comment in
      * following line of code and you should get something similar to the output I've included
      * below main and test1 output (The only output you actually get is optional output I included in
      * the hNode destructor that printed out that I was destroying a key)

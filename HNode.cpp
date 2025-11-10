@@ -68,6 +68,6 @@ string hNode::getRandValue() {
 }
 hNode::~hNode() {
     delete[] valueArr;
-    //cout << "Deleting " << key << endl;
+    cout << "Deleting " << key << endl;
     // destructor - make sure you delete the valueArr since it's on hte heap
 }
