@@ -1,6 +1,6 @@
 //
 // Created by Deb on 4/12/2025.
-//
+// Written by Kathleen and Aastha 
 
 #include "HashMap.h"
 #include "HNode.h"
@@ -137,14 +137,18 @@ int hashMap::collFn1(string k, int i) {
 
 int hashMap::collFn2(string k,  int i) {
 	// This uses double hashing for collision resolution. 
-	// 
+	// the first hash is just i (the index passed in)
 	int hash1 = i; 
+	// the second hash is computed by calling hashFn2 on the key
 	int hash2 = hashFn2(k);
 
+	// make sure hash2 is not 0
 	if (hash2 == 0) hash2 = 1;
+	// now loop through the map to find either an empty location or the key
 	for (int j = 1; j < mapSize; j++) {
+		// compute new index using double hashing
 		int newIndex = (hash1 + j * hash2) % mapSize;
-
+		// check if empty or key found
 		if (map[newIndex] == nullptr || map[newIndex]->key == k) {
 			collisionsCt += (j - 1);
 			return newIndex;
@@ -160,10 +164,12 @@ int hashMap::collFn3(string k, int i) {
 	for (int j = 1; j <= mapSize; j++){
 		// compute new index using quadratic probing 
 		int newIndex = (i + j * j) % mapSize;
+		// check if empty or key found
 		if (map[newIndex] == nullptr) {
 			collisionsCt += (j - 1);
 			return newIndex;
 		}
+		// check if key found
 		if (map[newIndex]->key == k){
 			return newIndex;
 		}
@@ -213,8 +219,11 @@ int hashMap::hashFn2(string k) {
 }
 
 int hashMap::hashFn3(string k) {
+	// uses the sum of the character values mod the largest prime below the map size
     int sum = 0;
+	// calculate sum of character values
     for (char c : k) sum += static_cast<int>(c);
+	// get largest prime below map size
     int primeBelow = getClosestPrime(mapSize - 1);
     return sum % primeBelow;
 }

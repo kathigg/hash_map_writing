@@ -1,3 +1,5 @@
+// Written by Kathleen and Aastha
+
 #include <iostream>
 #include "voice.h"
 #include <time.h>
